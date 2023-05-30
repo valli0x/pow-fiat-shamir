@@ -38,7 +38,8 @@ func ServerCmd() *cobra.Command {
 			})
 			logger.Info("starting fiat-shamir server")
 
-			
+			// mux := http.NewServeMux()
+			// mux.Handle("/fiat-shamir", )
 
 			return nil
 		},

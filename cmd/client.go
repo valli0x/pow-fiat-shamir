@@ -37,7 +37,7 @@ func ClientCmd() *cobra.Command {
 			})
 			logger.Info("starting fiat-shamir client")
 
-			
+			// serverAddress := os.Getenv("FIAT_SHAMIR_SERVER")
 
 			return nil
 		},
