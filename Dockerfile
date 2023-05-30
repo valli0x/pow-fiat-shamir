@@ -12,16 +12,12 @@ RUN GOARCH=${TARGETARCH} CGO_ENABLED=${CGO_ENABLED} GOOS=${TARGETOS} go build -o
 
 FROM alpine:edge
 
-ENV STORAGE_PASS=""
-ENV VAULT_ADDR=""
-ENV VAULT_TOKEN=""
-
 RUN apk add --no-cache ca-certificates
 
 WORKDIR /root
 
 COPY --from=build-env /go/src/github.com/pow-fiat-shamir/build/pow-fiat-shamir /usr/bin/pow-fiat-shamir
 
-COPY --from=build-env /go/src/github.com/pow-fiat-shamir/example/config-alice.yml /etc/pow-fiat-shamir-config.yml
+COPY --from=build-env /go/src/github.com/pow-fiat-shamir/example/config.yml /etc/pow-fiat-shamir-config.yml
 
 ENTRYPOINT ["pow-fiat-shamir"]
