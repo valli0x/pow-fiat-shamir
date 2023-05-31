@@ -3,6 +3,7 @@ package cmd
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"os"
 	"pow-fiat-shamir/sdk"
@@ -59,6 +60,13 @@ func ServerCmd() *cobra.Command {
 
 func fiatShamirStartHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+		default:
+			sdk.RespondError(w, http.StatusMethodNotAllowed, nil)
+			return
+		}
+
 		// compute crypto data
 		m, _ := sdk.GenerateKey(rand.Reader, 32)
 		G, H := sdk.ComputeGH(suite)
@@ -75,8 +83,10 @@ func fiatShamirStartHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 			return
 		}
 
+		// base64
 		dataBase64 := base64.StdEncoding.EncodeToString(dataCbor)
 
+		// send result
 		sdk.RespondOk(w, map[string]string{
 			"round1": dataBase64,
 		})
@@ -84,8 +94,38 @@ func fiatShamirStartHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 }
 
 func fiatShamirResultHandler(suite *edwards25519.SuiteEd25519) http.Handler {
+	type Body struct {
+		Round2 string `json:"round2"`
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := &Body{}
 
-		sdk.RespondOk(w, nil)
+		_, err := sdk.ParseJSONRequest(r, w, body)
+		if err != nil {
+			sdk.RespondError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		dataCbor, err := base64.StdEncoding.DecodeString(body.Round2)
+		if err != nil {
+			sdk.RespondError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		round2 := &sdk.Round2{}
+
+		if err := round2.UnmarshalBinary(dataCbor); err != nil {
+			sdk.RespondError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		a, b := sdk.ComputeAB(suite, round2.C, round2.XH, round2.XG, round2.RG, round2.RH)
+		valid := sdk.Valid(round2.VG, round2.VH, a, b)
+
+		if valid {
+			sdk.RespondOk(w, nil)
+		} else {
+			sdk.RespondError(w, http.StatusMethodNotAllowed, errors.New("Incorrect proof!"))
+		}
 	})
 }
