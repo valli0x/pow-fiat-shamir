@@ -123,7 +123,9 @@ func fiatShamirResultHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 		valid := sdk.Valid(round2.VG, round2.VH, a, b)
 
 		if valid {
-			sdk.RespondOk(w, nil)
+			sdk.RespondOk(w, map[string]string{
+				"quotes": "Wisdom is not a product of schooling but of the lifelong attempt to acquire it. Albert Einstein",
+			})
 		} else {
 			sdk.RespondError(w, http.StatusMethodNotAllowed, errors.New("Incorrect proof!"))
 		}
