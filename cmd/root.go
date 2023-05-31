@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultConfigFile = "pow-fiat-shamir-config.yml"
+	defaultConfigFile = "pow-fiat-shamir-config.yml.yml"
 )
 
 var (
@@ -27,6 +27,8 @@ var (
 
 func init() {
 	cobra.OnInitialize(initConfig)
+
+	RootCmd.PersistentFlags().StringVar(&homeDir, "config", "", "Directory for config (default is $HOME/"+defaultConfigFile+")")
 }
 
 func initConfig() {
