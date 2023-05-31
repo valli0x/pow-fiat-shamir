@@ -22,7 +22,7 @@ var (
 )
 
 func init() {
-	server := ClientCmd()
+	server := ServerCmd()
 
 	server.PersistentFlags().BoolVar(&serverFlags.LogsFormat, "log_json", false, "logs format")
 
