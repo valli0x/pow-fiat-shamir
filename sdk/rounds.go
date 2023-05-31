@@ -70,9 +70,9 @@ func (r2 *Round2) toMarshallable() *round2 {
 		XG: r2.XG,
 
 		RG: r2.RG,
-		RH: r2.RH, 
+		RH: r2.RH,
 
-		VG: r2.VG, 
+		VG: r2.VG,
 		VH: r2.VH,
 	}
 }

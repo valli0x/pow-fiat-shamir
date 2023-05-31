@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"pow-fiat-shamir/sdk"
-	"strings"
 	"time"
 
 	hclog "github.com/hashicorp/go-hclog"
@@ -47,7 +48,7 @@ func ClientCmd() *cobra.Command {
 			})
 			logger.Info("starting fiat-shamir client")
 
-			suite := edwards25519.NewBlakeSHA256Ed25519() // (client & server)
+			suite := edwards25519.NewBlakeSHA256Ed25519()
 
 			client := HttpClient()
 
@@ -89,8 +90,6 @@ func ClientCmd() *cobra.Command {
 }
 
 func StartRequest(client *http.Client, address string) (*sdk.Round1, error) {
-	round1 := &sdk.Round1{}
-
 	// request
 	body, err := getRequestFiatShamir(client, address)
 	if err != nil {
@@ -114,8 +113,10 @@ func StartRequest(client *http.Client, address string) (*sdk.Round1, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(hex.EncodeToString(dataCbor))
 
 	// get round1
+	round1 := &sdk.Round1{}
 	if err := round1.UnmarshalBinary(dataCbor); err != nil {
 		return nil, err
 	}
@@ -143,28 +144,53 @@ func getRequestFiatShamir(client *http.Client, address string) ([]byte, error) {
 }
 
 func ResultRequest(client *http.Client, address string, round2 *sdk.Round2) (string, error) {
-	// if err := resultRequestFiatShamir(client, address, ""); err != nil {
-	// 	return "", nil
-	// }
-	return "", nil
+	// decode to cbor format
+	dataCbor, err := round2.MarshalBinary()
+	if err != nil {
+		return "", err
+	}
+
+	// decode to base64 format
+	dataBase64 := base64.StdEncoding.EncodeToString(dataCbor)
+
+	// decode to json format
+	dataJson, err := jsonutil.EncodeJSON(map[string]string{
+		"round2": dataBase64,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// send result server
+	body, err := resultRequestFiatShamir(client, address, dataJson)
+	if err != nil {
+		return "", nil
+	}
+
+	return string(body), nil
 }
 
-func resultRequestFiatShamir(client *http.Client, address string, body string) error {
-	payload := strings.NewReader(body)
+func resultRequestFiatShamir(client *http.Client, address string, data []byte) ([]byte, error) {
+	payload := bytes.NewReader(data)
 
 	req, err := http.NewRequest(http.MethodPost, address+"/fiat-shamir/result", payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Body.Close()
 
-	return nil
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
 func HttpClient() *http.Client {
