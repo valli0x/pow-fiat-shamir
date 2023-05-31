@@ -9,12 +9,11 @@ import (
 )
 
 func TestFiatShamir(t *testing.T) {
-	m, _ := GenerateKey(rand.Reader, 32)
+	m, _ := GenerateKey(rand.Reader, 32) // (server)
 
-	suite := edwards25519.NewBlakeSHA256Ed25519()
-
-	x := ComputeX(m, suite)  // (client & server)
-	G, H := ComputeGH(suite) // (client) Next we can generate our elliptic curve points (G and H)
+	suite := edwards25519.NewBlakeSHA256Ed25519() // (client & server)
+	x := ComputeX(m, suite)                       // (client & server)
+	G, H := ComputeGH(suite)                      // (server) Next we can generate our elliptic curve points (G and H)
 
 	xG, xH := ComputexGxH(suite, G, H, x)           // (client) The values passed to Alice can be generated with
 	c := ComputeC(suite, G, H, xG, xH)              // (client) Bob can now generate a challenge, without requiring Alice to send it (non-interactive).
