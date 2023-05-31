@@ -98,6 +98,13 @@ func fiatShamirResultHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 		Round2 string `json:"round2"`
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+		default:
+			sdk.RespondError(w, http.StatusMethodNotAllowed, nil)
+			return
+		}
+
 		body := &Body{}
 
 		_, err := sdk.ParseJSONRequest(r, w, body)
