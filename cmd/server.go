@@ -68,7 +68,11 @@ func fiatShamirStartHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 		}
 
 		// compute crypto data
-		m, _ := sdk.GenerateKey(rand.Reader, 32)
+		m, err := sdk.GenerateKey(rand.Reader, 32)
+		if err != nil {
+			sdk.RespondError(w, http.StatusInternalServerError, err)
+			return
+		}
 		G, H := sdk.ComputeGH(suite)
 
 		// marshal sbor
@@ -105,30 +109,33 @@ func fiatShamirResultHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 			return
 		}
 
+		// parse body
 		body := &Body{}
-
 		_, err := sdk.ParseJSONRequest(r, w, body)
 		if err != nil {
 			sdk.RespondError(w, http.StatusBadRequest, err)
 			return
 		}
 
+		// get cbor format
 		dataCbor, err := base64.StdEncoding.DecodeString(body.Round2)
 		if err != nil {
 			sdk.RespondError(w, http.StatusInternalServerError, err)
 			return
 		}
 
+		// get round2
 		round2 := &sdk.Round2{}
-
 		if err := round2.UnmarshalBinary(dataCbor); err != nil {
 			sdk.RespondError(w, http.StatusInternalServerError, err)
 			return
 		}
 
+		// compute
 		a, b := sdk.ComputeAB(suite, round2.C, round2.XH, round2.XG, round2.RG, round2.RH)
 		valid := sdk.Valid(round2.VG, round2.VH, a, b)
 
+		// validation
 		if valid {
 			sdk.RespondOk(w, map[string]string{
 				"quotes": "Wisdom is not a product of schooling but of the lifelong attempt to acquire it. Albert Einstein",

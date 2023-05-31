@@ -33,7 +33,6 @@ func (r1 *Round1) UnmarshalBinary(data []byte) error {
 	if err := cbor.Unmarshal(data, r1); err != nil {
 		return err
 	}
-
 	return nil
 }
 
