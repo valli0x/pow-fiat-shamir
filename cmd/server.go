@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
+	"net/http"
 	"os"
 
 	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/vault/vault"
 	"github.com/spf13/cobra"
+	"go.uber.org/atomic"
 )
 
 type ServerFlags struct {
@@ -38,11 +42,48 @@ func ServerCmd() *cobra.Command {
 			})
 			logger.Info("starting fiat-shamir server")
 
-			// mux := http.NewServeMux()
-			// mux.Handle("/fiat-shamir", )
+			mux := http.NewServeMux()
+			mux.Handle("/fiat-shamir", fiatShamirHandler())
+			
+			logger.Error("Server error:", http.ListenAndServe(config.Address, mux))
 
 			return nil
 		},
 	}
 	return cmd
+}
+
+func fiatShamirHandler(raw *vault.RawBackend, token *atomic.String) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		respondOk(w, nil)
+	})
+}
+
+func respondOk(w http.ResponseWriter, body interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if body == nil {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		enc := json.NewEncoder(w)
+		enc.Encode(body)
+	}
+}
+
+func RespondError(w http.ResponseWriter, status int, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	type ErrorResponse struct {
+		Errors []string `json:"errors"`
+	}
+	resp := &ErrorResponse{Errors: make([]string, 0, 1)}
+	if err != nil {
+		resp.Errors = append(resp.Errors, err.Error())
+	}
+
+	enc := json.NewEncoder(w)
+	enc.Encode(resp)
 }

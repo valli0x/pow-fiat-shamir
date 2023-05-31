@@ -14,7 +14,7 @@ func TestFiatShamir(t *testing.T) {
 
 	suite := edwards25519.NewBlakeSHA256Ed25519()
 
-	x := ComputeX(m, suite)  // Alice and Bob
+	x := ComputeX(m, suite)  // (Alice & Bob)
 	G, H := ComputeGH(suite) // (Alice) Next we can generate our elliptic curve points (G and H)
 
 	fmt.Printf("Bob and Alice agree:\n G:\t%s\n H:\t%s\n\n", G, H)
@@ -29,16 +29,14 @@ func TestFiatShamir(t *testing.T) {
 
 	v, vG, vH := ComputeVvGvH(suite, G, H) // unknown
 
-	// Bob can then compute r, rG, and rH with:
-	// Response
-	r, rG, rH := ComputeRrGrH(suite, c, x, v, G, H)
+	r, rG, rH := ComputeRrGrH(suite, c, x, v, G, H) // (Bob) Bob can then compute r, rG, and rH with:
 
 	a, b := ComputeAB(suite, c, xH, xG, rG, rH) // (Alice) // Alice then checks
 
 	fmt.Printf("Alice sends challenge:\n c: %s\n\n", c)
 	fmt.Printf("Bob computes:\n v:\t%s\n r:\t%s\n\n", v, r)
 
-	if !Valid(vG, vH, a, b) { // Alice
+    if !Valid(vG, vH, a, b) { // Alice
 		fmt.Printf("Incorrect proof!\n")
 	} else {
 		fmt.Printf("Proof correct\n")
