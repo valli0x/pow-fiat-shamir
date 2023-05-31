@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"fmt"
+	"net/http"
 	"os"
+	"time"
 
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
 )
+
 type ClientFlags struct {
 	LogsFormat bool
 }
@@ -39,8 +43,35 @@ func ClientCmd() *cobra.Command {
 
 			// serverAddress := os.Getenv("FIAT_SHAMIR_SERVER")
 
+			client := HttpClient()
+
+			err = StartRequest(client)
+			if err != nil {
+				return err
+			}
+
+			quotes, err := ResultRequest(client)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Quotes from “word of wisdom” book:", quotes)
+
 			return nil
 		},
 	}
 	return cmd
+}
+
+func StartRequest(client *http.Client) error {
+	return nil
+}
+
+func ResultRequest(client *http.Client) (string, error) {
+	return "", nil
+}
+
+func HttpClient() *http.Client {
+	client := &http.Client{Timeout: 10 * time.Second}
+	return client
 }
