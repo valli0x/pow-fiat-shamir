@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -14,29 +13,19 @@ func TestFiatShamir(t *testing.T) {
 
 	suite := edwards25519.NewBlakeSHA256Ed25519()
 
-	x := ComputeX(m, suite)  // (Alice & Bob)
-	G, H := ComputeGH(suite) // (Alice) Next we can generate our elliptic curve points (G and H)
+	x := ComputeX(m, suite)  // (client & server)
+	G, H := ComputeGH(suite) // (client) Next we can generate our elliptic curve points (G and H)
 
-	fmt.Printf("Bob and Alice agree:\n G:\t%s\n H:\t%s\n\n", G, H)
-	fmt.Printf("Bob's Password:\t%s\n", hex.EncodeToString(m))
-	fmt.Printf("Bob's Secret (x):\t%s\n\n", x)
+	xG, xH := ComputexGxH(suite, G, H, x)           // (client) The values passed to Alice can be generated with
+	c := ComputeC(suite, G, H, xG, xH)              // (client) Bob can now generate a challenge, without requiring Alice to send it (non-interactive).
+	v, vG, vH := ComputeVvGvH(suite, G, H)          // (client) unknown
+	_, rG, rH := ComputeRrGrH(suite, c, x, v, G, H) // (client) Bob can then compute r, rG, and rH with:
 
-	xG, xH := ComputexGxH(suite, G, H, x) // (Bob) The values passed to Alice can be generated with
+	a, b := ComputeAB(suite, c, xH, xG, rG, rH) // (server) Alice then checks
+	valid := Valid(vG, vH, a, b)                // (server)
 
-	fmt.Printf("Bob sends these values:\n xG:\t%s\n xH\t%s\n\n", xG, xH)
-
-	c := ComputeC(suite, G, H, xG, xH) // (Bob) Bob can now generate a challenge, without requiring Alice to send it (non-interactive).
-
-	v, vG, vH := ComputeVvGvH(suite, G, H) // unknown
-
-	r, rG, rH := ComputeRrGrH(suite, c, x, v, G, H) // (Bob) Bob can then compute r, rG, and rH with:
-
-	a, b := ComputeAB(suite, c, xH, xG, rG, rH) // (Alice) // Alice then checks
-
-	fmt.Printf("Alice sends challenge:\n c: %s\n\n", c)
-	fmt.Printf("Bob computes:\n v:\t%s\n r:\t%s\n\n", v, r)
-
-    if !Valid(vG, vH, a, b) { // Alice
+	// check
+	if valid {
 		fmt.Printf("Incorrect proof!\n")
 	} else {
 		fmt.Printf("Proof correct\n")
