@@ -6,9 +6,7 @@ import (
 	"os"
 
 	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/vault/vault"
 	"github.com/spf13/cobra"
-	"go.uber.org/atomic"
 )
 
 type ServerFlags struct {
@@ -44,7 +42,7 @@ func ServerCmd() *cobra.Command {
 
 			mux := http.NewServeMux()
 			mux.Handle("/fiat-shamir", fiatShamirHandler())
-			
+
 			logger.Error("Server error:", http.ListenAndServe(config.Address, mux))
 
 			return nil
@@ -53,7 +51,7 @@ func ServerCmd() *cobra.Command {
 	return cmd
 }
 
-func fiatShamirHandler(raw *vault.RawBackend, token *atomic.String) http.Handler {
+func fiatShamirHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		respondOk(w, nil)
