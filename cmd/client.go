@@ -125,7 +125,7 @@ func StartRequest(client *http.Client, address string) (*sdk.Round1, error) {
 }
 
 func getRequestFiatShamir(client *http.Client, address string) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodGet, address+"/fiat-shamir/start", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://"+address+"/fiat-shamir/start", nil)
 	if err != nil {
 		return nil, err
 	}
