@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -52,7 +51,7 @@ func ClientCmd() *cobra.Command {
 
 			client := HttpClient()
 
-			round1, err := StartRequest(client, config.Address)
+			round1, err := StartRequest(client, config.Address, suite)
 			if err != nil {
 				return err
 			}
@@ -89,7 +88,7 @@ func ClientCmd() *cobra.Command {
 	return cmd
 }
 
-func StartRequest(client *http.Client, address string) (*sdk.Round1, error) {
+func StartRequest(client *http.Client, address string, suite *edwards25519.SuiteEd25519) (*sdk.Round1, error) {
 	// request
 	body, err := getRequestFiatShamir(client, address)
 	if err != nil {
@@ -113,10 +112,14 @@ func StartRequest(client *http.Client, address string) (*sdk.Round1, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(hex.EncodeToString(dataCbor))
 
 	// get round1
-	round1 := &sdk.Round1{}
+	round1 := &sdk.Round1{
+		G: suite.Point(), 
+		H: suite.Point(),
+	}
+	// ! cbor не выполняет маршаллинг если значения не заполнены
+	// ! данные будут перезаписаны при маршаллинге, значение является указателем, скорее всего из за этого ошибка была
 	if err := round1.UnmarshalBinary(dataCbor); err != nil {
 		return nil, err
 	}
@@ -164,7 +167,7 @@ func ResultRequest(client *http.Client, address string, round2 *sdk.Round2) (str
 	// send result server
 	body, err := resultRequestFiatShamir(client, address, dataJson)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return string(body), nil

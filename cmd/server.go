@@ -125,7 +125,18 @@ func fiatShamirResultHandler(suite *edwards25519.SuiteEd25519) http.Handler {
 		}
 
 		// get round2
-		round2 := &sdk.Round2{}
+		round2 := &sdk.Round2{
+			C: suite.Scalar(),
+
+			XH: suite.Point(),
+			XG: suite.Point(),
+
+			RG: suite.Point(),
+			RH: suite.Point(),
+
+			VG: suite.Point(),
+			VH: suite.Point(),
+		}
 		if err := round2.UnmarshalBinary(dataCbor); err != nil {
 			sdk.RespondError(w, http.StatusInternalServerError, err)
 			return
