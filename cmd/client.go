@@ -173,7 +173,7 @@ func ResultRequest(client *http.Client, address string, round2 *sdk.Round2) (str
 func resultRequestFiatShamir(client *http.Client, address string, data []byte) ([]byte, error) {
 	payload := bytes.NewReader(data)
 
-	req, err := http.NewRequest(http.MethodPost, address+"/fiat-shamir/result", payload)
+	req, err := http.NewRequest(http.MethodPost, "http://"+address+"/fiat-shamir/result", payload)
 	if err != nil {
 		return nil, err
 	}
