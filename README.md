@@ -1,17 +1,14 @@
 # pow-fiat-shamir
 
-Необходимо чтобы клиент доказал серверу, что знает секрет x в ходе вычислений по протоколу Фиата-Шамира.
-[статья](https://asecuritysite.com/golang/go_fiat2). При этом каждый раз приходит случайная последовательность байтов.
-Этапы: 
-1. Клиент отправляет запрос - request service. Сервер в ответе присылает случайные 32 байта и точки G и H для эллиптической кривой.
-2. Клиент производит вычисления и отправляет результат серверу криптографические результаты с полезной нагрузкой.
+It is necessary for the client to prove to the server that he knows the secret of x during calculations using the Fiat-Shamir protocol.
+[article](https://asecuritysite.com/golang/go_fiat2). At the same time, a random sequence of bytes arrives each time. 
+Stages: 
+1. The client sends a request - request service. The server sends a random 32 bytes and the points G and H for the elliptical curve in the response.
+2. The client performs calculations and sends the result to the server cryptographic results with a payload.
 
-Серверу не нужно проверять почту или хеш в базе данных как в hashcash. Только проверить случайные 32 байта на оригинальность.
-Возможно оперируя точками на эллиптической кривой можно для одной последовательсти байтов генерировать разные результаты, что
-позволит исключить хранение как hashcash всех ранее полученных хешей, так как вычислять для одной и той же последовательности байтов
-но разными данными для эллиптической кривой придется в любом случае, иначе на сервере критографические результаты не пройдут проверку.
+The server does not need to check the mail or hash in the database as in hashcash. Only check random 32 bytes for originality. Perhaps using points on an elliptic curve, it is possible to generate different results for one sequence of bytes, which will eliminate the storage of all previously obtained hashes as hashcash, since it will be necessary to calculate for the same sequence of bytes but with different data for the elliptic curve in any case, otherwise the cryptographic results will not pass verification on the server.
 
-На данный момент не понятно как можно регулировать сложность выбирая точки эллиптической кривой (G and H) и возможно ли это.
+At the moment, it is not clear how the complexity can be adjusted by choosing the points of the elliptic curve (G and H) and whether this is possible.
 
 ```
 server - go run pow-fiat-shamir server --config ./example/config.yml
